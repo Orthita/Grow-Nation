@@ -1,0 +1,88 @@
+:root{--p:#6D28D9;--p2:#7c3aed;--l:#C4B5FD;--m:#F5F0FF;--ink:#24133F;--mute:#5c5470;--line:#E2D8F7;--bad:#b91c1c;color-scheme:light}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font:400 15px/1.55 "Public Sans",system-ui,sans-serif;color:var(--ink);background:#faf8ff}
+h1,h2,h3{font-family:"Bricolage Grotesque","Public Sans",sans-serif;margin:0;letter-spacing:-.02em}
+a{color:var(--p)}
+:focus-visible{outline:3px solid var(--l);outline-offset:2px}
+.hid{display:none!important}
+button{font:inherit}
+.btn{border:0;border-radius:999px;padding:10px 20px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.6;cursor:wait}
+.btn.ghost{background:#fff;color:var(--p);box-shadow:inset 0 0 0 1.5px var(--l)}
+.btn.danger{background:#fff;color:var(--bad);box-shadow:inset 0 0 0 1.5px #f0b4b4}
+.btn.sm{padding:6px 14px;font-size:.85rem}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--p);outline:3px solid #C4B5FD66}
+input[type=checkbox]{width:auto}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:.84rem;font-weight:600;margin-bottom:4px}
+.hint{font-size:.78rem;color:var(--mute);font-weight:400}
+.err{background:#fef2f2;border:1.5px solid #f0b4b4;color:#7f1d1d;padding:10px 14px;border-radius:9px;margin-bottom:14px}
+.okmsg{background:#ECE6FA;border:1.5px solid var(--l);padding:10px 14px;border-radius:9px;margin-bottom:14px}
+
+/* login */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,var(--m),#DCD1F2)}
+.login-box{background:#fff;border:1px solid var(--line);border-top:5px solid var(--p);border-radius:14px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 50px #6D28D922}
+.login-box h1{font-size:1.6rem;margin-bottom:4px}
+.login-box .sub{color:var(--mute);margin:0 0 20px}
+.login-box .row{margin-bottom:14px}
+
+/* app shell */
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+.side{background:#fff;border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.side .brand{font:800 1.15rem "Bricolage Grotesque",sans-serif;padding:4px 10px 16px}
+.side a.nav{display:block;padding:9px 12px;border-radius:9px;text-decoration:none;color:var(--mute);font-weight:600}
+.side a.nav:hover{background:var(--m);color:var(--p)}
+.side a.nav[aria-current=page]{background:var(--m);color:var(--p)}
+.side .who{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:.82rem;color:var(--mute);word-break:break-all}
+.main{padding:26px 28px 60px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.top h2{font-size:1.6rem}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools input,.tools select{width:auto;min-width:160px}
+.menu-btn{display:none}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:#fff;border:1px solid var(--line);border-top:4px solid var(--p);border-radius:12px;padding:16px}
+.stat b{display:block;font:800 1.9rem "Bricolage Grotesque",sans-serif}
+.stat span{color:var(--mute);font-size:.85rem}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+.panel h3{margin-bottom:10px}
+
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.88rem}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--m);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+tr:last-child td{border-bottom:0}
+td.act{white-space:nowrap}
+td .btn{margin-right:4px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.76rem;font-weight:700;background:var(--m);color:var(--p);box-shadow:inset 0 0 0 1px var(--l)}
+.pill.bad{background:#fef2f2;color:var(--bad);box-shadow:inset 0 0 0 1px #f0b4b4}
+.pill.mute{background:#f3f4f6;color:#555;box-shadow:inset 0 0 0 1px #ddd}
+.empty{padding:30px;text-align:center;color:var(--mute)}
+
+dialog{border:0;border-radius:14px;padding:0;width:min(640px,94vw);max-height:92vh;box-shadow:0 30px 80px #24133f55}
+dialog::backdrop{background:#24133f88}
+dialog form{display:flex;flex-direction:column;max-height:92vh}
+dialog .dh{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+dialog .db{padding:18px 22px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+dialog .db .full{grid-column:1/-1}
+dialog .df{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+dialog .df .msg{margin-right:auto;color:var(--bad);font-size:.85rem}
+.detail{background:var(--m);border-radius:10px;padding:12px 14px;font-size:.9rem}
+.detail dt{font-weight:700;font-size:.78rem;color:var(--mute);margin-top:8px}.detail dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.up{display:flex;gap:8px;align-items:center}
+.up input[type=file]{display:none}
+code.key{display:block;background:var(--m);padding:10px;border-radius:8px;word-break:break-all;font-size:.95rem;letter-spacing:.06em;margin:8px 0}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+
+@media (max-width:860px){
+.app{grid-template-columns:minmax(0,1fr)}
+.side{position:fixed;inset:0 auto 0 0;width:250px;z-index:50;transform:translateX(-102%);transition:transform .2s;box-shadow:0 0 40px #0004}
+.side.open{transform:none}
+.menu-btn{display:inline-block}
+.main{padding:18px 14px 50px}
+.cols2{grid-template-columns:1fr}
+dialog .db{grid-template-columns:1fr}
+}

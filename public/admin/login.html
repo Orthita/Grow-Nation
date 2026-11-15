@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin login | Grow Nation</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div class="login-wrap"><form class="login-box" id="lf" novalidate>
+  <h1>Grow Nation</h1>
+  <p class="sub">Team login</p>
+  <div class="err hid" id="lerr" role="alert"></div>
+  <div id="step1">
+    <div class="row"><label for="em">Email</label><input id="em" type="email" autocomplete="username" required></div>
+    <div class="row"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+  </div>
+  <div id="step2" class="hid">
+    <div class="row"><label for="cd">Code from your authenticator app</label><input id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"></div>
+    <p class="hint">Open Google Authenticator (or similar) and type the 6-digit code for Grow Nation.</p>
+  </div>
+  <button class="btn" id="lb" type="submit" style="width:100%">Log in</button>
+  <p class="hint" style="margin:14px 0 0"><a href="/">Back to website</a></p>
+</form></div>
+<script src="/admin/login.js"></script>
+</body>
+</html>

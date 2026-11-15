@@ -1,0 +1,28 @@
+{
+  "name": "grow-nation",
+  "version": "1.0.0",
+  "description": "Grow Nation website: Express API, MySQL database and admin panel",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node --watch server/app.js",
+    "init-db": "node scripts/init-db.js",
+    "test": "node scripts/selftest.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.0",
+    "mysql2": "^3.11.5",
+    "nodemailer": "^6.9.16"
+  }
+}

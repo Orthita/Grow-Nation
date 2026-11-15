@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin | Grow Nation</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Admin menu">
+    <div class="brand">Grow Nation</div>
+    <div id="nav"></div>
+    <div class="who"><span id="who"></span><br><button class="btn ghost sm" id="logout" style="margin-top:8px">Log out</button></div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <div style="display:flex;gap:10px;align-items:center"><button class="btn ghost sm menu-btn" id="menu" aria-label="Open menu">Menu</button><h2 id="title">Overview</h2></div>
+      <div class="tools" id="tools"></div>
+    </div>
+    <div id="msg"></div>
+    <div id="view"><p class="empty">Loading...</p></div>
+  </div>
+</div>
+
+<dialog id="dlg"><form id="dform" method="dialog" novalidate>
+  <div class="dh"><h3 id="dtitle"></h3><button type="button" class="btn ghost sm" id="dclose" aria-label="Close">Close</button></div>
+  <div class="db" id="dbody"></div>
+  <div class="df"><span class="msg" id="dmsg" role="alert"></span><button type="button" class="btn ghost" id="dcancel">Cancel</button><button type="submit" class="btn" id="dsave">Save</button></div>
+</form></dialog>
+
+<script src="/admin/admin.js"></script>
+</body>
+</html>

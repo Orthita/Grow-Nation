@@ -1,0 +1,65 @@
+// Creates the database, tables, starter content and the first Super admin.
+// Usage: npm run init-db
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
+
+const root = path.join(__dirname, '..');
+const strip = (sql) => sql.replace(/^\s*(CREATE DATABASE|USE)\b[^;]*;\s*$/gim, '');
+
+(async () => {
+  const db = process.env.DB_NAME || 'grow_nation';
+  if (!/^[A-Za-z0-9_]+$/.test(db)) throw new Error('DB_NAME may only contain letters, numbers and underscore');
+
+  const conn = await mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    port: +process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    multipleStatements: true,
+    charset: 'utf8mb4',
+  });
+
+  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${db}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  await conn.query(`USE \`${db}\``);
+  await conn.query(strip(fs.readFileSync(path.join(root, 'database', 'schema.sql'), 'utf8')));
+  console.log('Tables ready.');
+
+  const [[cat]] = await conn.query('SELECT COUNT(*) AS n FROM categories');
+  if (cat.n === 0 && !process.argv.includes('--no-seed')) {
+    await conn.query(strip(fs.readFileSync(path.join(root, 'database', 'seed.sql'), 'utf8')));
+    console.log('Starter content added (courses, slides, resources, 3 demo certificates).');
+  } else {
+    console.log('Starter content skipped (database already has data).');
+  }
+
+  const [[usr]] = await conn.query('SELECT COUNT(*) AS n FROM users');
+  if (usr.n === 0) {
+    const email = (process.env.ADMIN_EMAIL || 'admin@example.com').toLowerCase();
+    let password = process.env.ADMIN_PASSWORD;
+    let generated = false;
+    if (!password || password.length < 10) {
+      password = crypto.randomBytes(9).toString('base64url');
+      generated = true;
+    }
+    const hash = await bcrypt.hash(password, 12);
+    await conn.query(
+      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      [process.env.ADMIN_NAME || 'Super Admin', email, hash, 'super_admin']
+    );
+    console.log('\nFirst Super admin created:');
+    console.log('  Email:    ' + email);
+    console.log('  Password: ' + password + (generated ? '   (generated, change it after first login)' : ''));
+  } else {
+    console.log('Admin users already exist, nothing created.');
+  }
+
+  await conn.end();
+  console.log('\nDone.');
+})().catch((e) => {
+  console.error('init-db failed:', e.message);
+  process.exit(1);
+});
