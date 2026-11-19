@@ -102,14 +102,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
-const port = +process.env.PORT || 3000;
-app.listen(port, async () => {
-  console.log(`Grow Nation running at http://localhost:${port}`);
-  try {
-    await pool.query('SELECT 1');
-    console.log('Database connected.');
-  } catch (e) {
-    console.error('\nCould not connect to MySQL: ' + e.message);
-    console.error('Check DB_* values in .env, then run: npm run init-db\n');
-  }
-});
+// On Vercel the app is imported by api/index.js and run as a serverless function, so it must not listen itself.
+module.exports = app;
+
+if (require.main === module) {
+  const port = +process.env.PORT || 3000;
+  app.listen(port, async () => {
+    console.log(`Grow Nation running at http://localhost:${port}`);
+    try {
+      await pool.query('SELECT 1');
+      console.log('Database connected.');
+    } catch (e) {
+      console.error('\nCould not connect to MySQL: ' + e.message);
+      console.error('Check DB_* values in .env, then run: npm run init-db\n');
+    }
+  });
+}

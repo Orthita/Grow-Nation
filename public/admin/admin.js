@@ -93,7 +93,7 @@
       { k: 'title', label: training ? 'Training title' : 'Service title', req: true, full: true },
       { k: 'summary', label: training ? 'Short description' : 'Description', t: 'textarea', full: true, hint: 'One or two sentences shown at the top of the card.' },
       { k: 'topics', label: training ? 'Training details (course content)' : 'Details', t: 'textarea', full: true, hint: 'One point per line. Each line becomes a bullet on the card.' },
-      { k: 'image', label: 'Image', t: 'upload', accept: 'image/*', full: true, hint: 'Optional. JPG, PNG or WebP, up to 8 MB. Wide images look best.' }
+      { k: 'image', label: 'Image', t: 'upload', accept: 'image/*', full: true, hint: 'Optional. JPG, PNG or WebP, up to 4 MB. Wide images look best.' }
     ];
     if (training) fields.push({ k: 'duration', label: 'Duration', hint: 'For example 2 days, or 16 hours' }, { k: 'fee', label: 'Fee', hint: 'For example BDT 5,000 per person' });
     else fields.push({ k: 'duration', label: 'Typical duration (optional)' });

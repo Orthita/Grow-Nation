@@ -140,7 +140,7 @@ router.post('/2fa/disable', wrap(async (req, res) => {
 }));
 
 // ======================= Uploads =======================
-const { uploadDir: uploadsDir } = require('../config'); // UPLOAD_DIR in .env, default server/uploads
+const { uploadDir: uploadsDir, blobEnabled, onVercel } = require('../config'); // UPLOAD_DIR in .env, default server/uploads
 const EXT = {
   'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif',
   'application/pdf': '.pdf',
@@ -148,12 +148,15 @@ const EXT = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
 };
+const MAX_MB = onVercel ? 4 : 8;
 const upload = multer({
-  storage: multer.diskStorage({
+  // With Vercel Blob the file is kept in memory and sent to Blob storage; otherwise it is saved to disk.
+  storage: blobEnabled ? multer.memoryStorage() : multer.diskStorage({
     destination: uploadsDir,
     filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + EXT[file.mimetype]),
   }),
-  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
+  // Vercel refuses request bodies over 4.5 MB, so the limit there is 4 MB.
+  limits: { fileSize: MAX_MB * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
     if (!EXT[file.mimetype]) return cb(new Error('Only images, PDF, Word, Excel and PowerPoint files are allowed'));
     cb(null, true);
@@ -162,10 +165,19 @@ const upload = multer({
 
 router.post('/upload', allow('super_admin', 'editor', 'certificate_officer'), (req, res, next) => {
   upload.single('file')(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File is bigger than 8 MB' : err.message });
+    if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File is bigger than ' + MAX_MB + ' MB' : err.message });
     if (!req.file) return res.status(400).json({ error: 'No file received' });
-    await audit(req, 'upload', 'uploads', req.file.filename);
-    res.json({ url: '/uploads/' + req.file.filename });
+    try {
+      if (blobEnabled) {
+        const { put } = require('@vercel/blob');
+        const name = 'uploads/' + crypto.randomBytes(12).toString('hex') + EXT[req.file.mimetype];
+        const blob = await put(name, req.file.buffer, { access: 'public', contentType: req.file.mimetype, addRandomSuffix: false });
+        await audit(req, 'upload', 'uploads', name);
+        return res.json({ url: blob.url });
+      }
+      await audit(req, 'upload', 'uploads', req.file.filename);
+      res.json({ url: '/uploads/' + req.file.filename });
+    } catch (e) { next(e); }
   });
 });
 

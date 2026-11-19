@@ -251,3 +251,25 @@ Running `npm run init-db` never changes existing tables or data, so it cannot "u
 - [ ] Footer contact links work (phone, email, website)
 - [ ] Enroll Now opens an email with the course in the subject
 - [ ] Old addresses redirect to their home-page sections: `/training.html`, `/consultancy.html`, `/verify.html`, `/about.html`, `/services.html`, `/contact.html`
+
+---
+
+## 3C. Path C: Vercel (branch `host`)
+
+Vercel runs the site as a serverless function (`api/index.js`, configured in `vercel.json`).
+Vercel has no MySQL and no permanent disk, so you need two extras:
+
+1. **A cloud MySQL database** (for example Aiven, TiDB Cloud, Railway or any MySQL 8 host that allows
+   outside connections). Note its host, port, user, password and database name.
+2. **A Vercel Blob store** for uploads: Vercel dashboard → your project → **Storage** → **Create** → **Blob** →
+   connect it to the project. This adds `BLOB_READ_WRITE_TOKEN` automatically. Uploads are limited to 4 MB on Vercel.
+
+Steps:
+1. On your computer, put the cloud database values in `.env` (with `DB_SSL=true`) and run `npm run init-db` once
+   to create the tables and the first admin.
+2. In Vercel → **Project → Settings → Environment Variables**, add: `NODE_ENV=production`, `DB_HOST`, `DB_PORT`,
+   `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL=true`, `SESSION_SECRET`, `TOTP_KEY`, `TRUST_PROXY=1`,
+   `ENQUIRIES_ENABLED=false`.
+3. Deploy from the `host` branch: `npx vercel --prod` in the project folder, or connect the GitHub repo in
+   Vercel and set the Production Branch to `host`.
+4. Open `https://<your-project>.vercel.app/api/health`: it should say `"db": true`.

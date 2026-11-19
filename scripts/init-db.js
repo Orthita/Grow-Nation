@@ -21,6 +21,9 @@ const strip = (sql) => sql.replace(/^\s*(CREATE DATABASE|USE)\b[^;]*;\s*$/gim, '
     password: process.env.DB_PASSWORD || '',
     multipleStatements: true,
     charset: 'utf8mb4',
+    ssl: /^(1|true|yes|on|required)$/i.test(String(process.env.DB_SSL || '').trim())
+      ? (process.env.DB_SSL_CA ? { ca: process.env.DB_SSL_CA.replace(/\\n/g, '\n') } : { rejectUnauthorized: true, minVersion: 'TLSv1.2' })
+      : undefined,
   });
 
   await conn.query(`CREATE DATABASE IF NOT EXISTS \`${db}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
