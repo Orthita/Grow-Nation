@@ -25,8 +25,9 @@
     if (opts.form) { init.method = 'POST'; init.body = opts.form; }
     return fetch('/api/admin' + path, init).then(function (r) {
       return r.json().catch(function () { return null; }).then(function (d) {
-        if (r.status === 401 && path !== '/login') { location.replace('/admin/login.html'); throw new Error('Please log in'); }
-        if (!r.ok) throw new Error((d && d.error) || 'Something went wrong');
+        var e;
+        if (r.status === 401 && path !== '/login') { location.replace('/admin/login.html'); e = new Error('Please log in'); e.status = 401; throw e; }
+        if (!r.ok) { e = new Error((d && d.error) || 'Something went wrong'); e.status = r.status; throw e; }
         return d;
       });
     });
@@ -53,7 +54,8 @@
   var SECTIONS = [
     { id: 'overview', label: 'Overview', roles: null, render: renderOverview },
     {
-      id: 'enquiries', label: 'Enquiries', roles: ['super_admin', 'support'], res: 'enquiries', noCreate: true, noun: 'enquiry',
+      // Only Super admin can delete; Support closes enquiries instead.
+      id: 'enquiries', label: 'Enquiries', roles: ['super_admin', 'support'], deleteRoles: ['super_admin'], res: 'enquiries', noCreate: true, noun: 'enquiry',
       cols: [['created_at', 'Date', function (r) { return esc(fmtDT(r.created_at)); }], ['name', 'Name'], ['organisation', 'Organisation'],
         ['contact', 'Contact', function (r) { return esc(r.phone || '') + (r.phone && r.email ? '<br>' : '') + esc(r.email || ''); }],
         ['interest', 'Interested in'], ['status', 'Status', function (r) { return statusPill(r.status); }]],
@@ -97,7 +99,8 @@
       ]
     },
     {
-      id: 'certificates', label: 'Certificates', roles: ['super_admin', 'certificate_officer'], res: 'certificates', noun: 'certificate',
+      // Only Super admin can delete; Certificate officers revoke instead.
+      id: 'certificates', label: 'Certificates', roles: ['super_admin', 'certificate_officer'], deleteRoles: ['super_admin'], res: 'certificates', noun: 'certificate',
       cols: [['number', 'Number'], ['holder_name', 'Holder'], ['course_title', 'Course'], ['issue_date', 'Issued'], ['valid_until', 'Valid until', function (r) { return esc(r.valid_until || 'no expiry'); }],
         ['status', 'Status', function (r) { return statusPill(r.status === 'revoked' ? 'revoked' : (+r.is_expired ? 'expired' : 'valid')); }]],
       defaults: { status: 'valid' },
@@ -178,6 +181,7 @@
   ];
 
   function allowed(sec) { return !sec.hidden && (!sec.roles || sec.roles.indexOf(me.role) >= 0); }
+  function canDelete(sec) { return !sec.deleteRoles || sec.deleteRoles.indexOf(me.role) >= 0; }
 
   // ---------- navigation ----------
   function buildNav() {
@@ -219,12 +223,15 @@
           return Object.keys(r).some(function (k) { return String(r[k] == null ? '' : r[k]).toLowerCase().indexOf(q) >= 0; });
         });
         var intro = sec.intro ? '<p class="hint" style="margin:0 0 12px">' + esc(sec.intro) + '</p>' : '';
+        var del = canDelete(sec);
+        if (!del && sec.id === 'certificates') intro += '<p class="hint" style="margin:0 0 12px">To withdraw a certificate, edit it and set the status to Revoked. Only a Super admin can delete.</p>';
+        if (!del && sec.id === 'enquiries') intro += '<p class="hint" style="margin:0 0 12px">When an enquiry is finished, set its status to Closed. Only a Super admin can delete.</p>';
         if (!list.length) { $('#view').innerHTML = intro + '<div class="panel empty">Nothing here yet.</div>'; return; }
         $('#view').innerHTML = intro + '<div class="tw"><table><thead><tr>' + sec.cols.map(function (c) { return '<th>' + esc(c[1]) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>' +
           list.map(function (r) {
             return '<tr>' + sec.cols.map(function (c) { return '<td>' + (c[2] ? c[2](r) : cut(r[c[0]], 70)) + '</td>'; }).join('') +
               '<td class="act"><button class="btn ghost sm" data-e="' + r.id + '">' + (sec.detail ? 'View' : 'Edit') + '</button>' +
-              '<button class="btn danger sm" data-d="' + r.id + '">Delete</button></td></tr>';
+              (del ? '<button class="btn danger sm" data-d="' + r.id + '">Delete</button>' : '') + '</td></tr>';
           }).join('') + '</tbody></table></div>';
         $$('[data-e]').forEach(function (b) {
           b.onclick = function () { openForm(sec, rows.filter(function (r) { return String(r.id) === b.getAttribute('data-e'); })[0]); };
@@ -402,5 +409,11 @@
   };
   window.addEventListener('hashchange', route);
 
-  api('/me').then(function (u) { me = u; buildNav(); route(); });
+  api('/me').then(function (u) { me = u; buildNav(); route(); }).catch(function (e) {
+    if (e.status === 401) return; // already on the way to the login page
+    var msg = e.status ? e.message : 'Could not reach the server. Check that it is running, then reload the page.';
+    $('#title').textContent = 'Could not load the dashboard';
+    $('#view').innerHTML = '<div class="err" role="alert">' + esc(msg) + '</div><p><button class="btn" type="button" id="retry">Try again</button></p>';
+    $('#retry').onclick = function () { location.reload(); };
+  });
 })();

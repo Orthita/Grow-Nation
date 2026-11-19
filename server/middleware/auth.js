@@ -8,7 +8,8 @@ function cookieOptions() {
   return {
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.COOKIE_SECURE === 'true',
+    // Always secure in production (HTTPS only). Locally it follows COOKIE_SECURE, so http://localhost works.
+    secure: process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true',
     path: '/',
     maxAge: MAX_AGE,
   };

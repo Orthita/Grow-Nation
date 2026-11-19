@@ -1,4 +1,3 @@
-const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
@@ -141,7 +140,7 @@ router.post('/2fa/disable', wrap(async (req, res) => {
 }));
 
 // ======================= Uploads =======================
-const uploadsDir = path.join(__dirname, '..', 'uploads');
+const { uploadDir: uploadsDir } = require('../config'); // UPLOAD_DIR in .env, default server/uploads
 const EXT = {
   'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif',
   'application/pdf': '.pdf',
@@ -336,13 +335,15 @@ const RES = {
     },
   },
   enquiries: {
-    table: 'enquiries', roles: ['super_admin', 'support'], noCreate: true,
+    // Only Super admin may delete; Support closes enquiries instead.
+    table: 'enquiries', roles: ['super_admin', 'support'], noCreate: true, deleteRoles: ['super_admin'],
     list: `SELECT e.*, c.title AS course_title FROM enquiries e LEFT JOIN courses c ON c.id = e.course_id
             ORDER BY e.created_at DESC, e.id DESC LIMIT 500`,
     fields: { status: { t: 'enum', req: true, v: ['new', 'contacted', 'closed'] } },
   },
   certificates: {
-    table: 'certificates', roles: ['super_admin', 'certificate_officer'],
+    // Only Super admin may delete; Certificate officers revoke instead.
+    table: 'certificates', roles: ['super_admin', 'certificate_officer'], deleteRoles: ['super_admin'],
     list: `SELECT ce.*, co.title AS course_title,
                   (ce.valid_until IS NOT NULL AND ce.valid_until < CURDATE()) AS is_expired
              FROM certificates ce JOIN courses co ON co.id = ce.course_id
@@ -455,7 +456,7 @@ for (const [name, R] of Object.entries(RES)) {
     } catch (e) { dbError(e, res, next); }
   }));
 
-  router.delete(base + '/:id', allow(...R.roles), wrap(async (req, res, next) => {
+  router.delete(base + '/:id', allow(...(R.deleteRoles || R.roles)), wrap(async (req, res, next) => {
     try {
       const [r] = await pool.execute(`DELETE FROM \`${R.table}\` WHERE id = ?`, [+req.params.id]);
       if (!r.affectedRows) return res.status(404).json({ error: 'Not found' });

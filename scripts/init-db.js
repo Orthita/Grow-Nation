@@ -31,7 +31,7 @@ const strip = (sql) => sql.replace(/^\s*(CREATE DATABASE|USE)\b[^;]*;\s*$/gim, '
   const [[cat]] = await conn.query('SELECT COUNT(*) AS n FROM categories');
   if (cat.n === 0 && !process.argv.includes('--no-seed')) {
     await conn.query(strip(fs.readFileSync(path.join(root, 'database', 'seed.sql'), 'utf8')));
-    console.log('Starter content added (courses, slides, resources, 3 demo certificates).');
+    console.log('Starter content added (courses, slides, contact details). No certificates: add real ones in the admin panel.');
   } else {
     console.log('Starter content skipped (database already has data).');
   }

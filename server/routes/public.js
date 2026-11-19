@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const pool = require('../db');
 const { notifyEnquiry } = require('../mailer');
+const { enquiriesEnabled } = require('../config');
 
 const router = express.Router();
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -75,8 +76,12 @@ router.get('/settings', wrap(async (req, res) => {
   res.json(out);
 }));
 
-// ---- Enquiry form (also used by Enroll Now) ----
-router.post('/enquiries', enquiryLimiter, [
+// ---- Enquiry form ----
+// The site has no enquiry form at the moment, so this is switched off unless ENQUIRIES_ENABLED=true.
+// When off it answers 404 and sends no email. The code, the table and Admin > Enquiries stay for later.
+const enquiriesSwitch = (req, res, next) => (enquiriesEnabled ? next() : res.status(404).json({ error: 'Not found' }));
+
+router.post('/enquiries', enquiriesSwitch, enquiryLimiter, [
   body('name').trim().isLength({ min: 2, max: 150 }).withMessage('Please enter your name'),
   body('organisation').optional({ values: 'falsy' }).trim().isLength({ max: 190 }),
   body('phone').optional({ values: 'falsy' }).trim().isLength({ max: 40 }).matches(/^[0-9+()\-\s.]{6,40}$/).withMessage('Phone number looks wrong'),

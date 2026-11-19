@@ -6,17 +6,29 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const pool = require('./db');
+const { isProd, uploadDir } = require('./config');
+const { totpKeyProblem } = require('./lib/crypto');
 
-const isProd = process.env.NODE_ENV === 'production';
 const secret = process.env.SESSION_SECRET || '';
 if (secret.length < 32 || /change_me/i.test(secret)) {
   console.error('\nSESSION_SECRET is missing or too weak. Put a long random value (32+ characters) in .env\n');
   process.exit(1);
 }
+if (isProd && totpKeyProblem()) {
+  console.error('\n' + totpKeyProblem() + '. In production, put a separate long random value (32+ characters) in TOTP_KEY in .env.\n' +
+    'Generate one with:  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"\n');
+  process.exit(1);
+}
 
 const app = express();
 app.disable('x-powered-by');
-if (isProd) app.set('trust proxy', 1); // running behind Nginx
+
+// TRUST_PROXY: how many proxies sit in front of the app (e.g. 1 for Nginx or cPanel). Empty or 0 = off.
+const trustProxy = String(process.env.TRUST_PROXY || '').trim();
+if (/^[1-9]\d*$/.test(trustProxy)) app.set('trust proxy', +trustProxy);
+else if (trustProxy && !/^(0|false|off|no)$/i.test(trustProxy)) {
+  console.warn('[warning] TRUST_PROXY should be a number such as 1. Ignoring "' + trustProxy.slice(0, 20) + '".');
+}
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -36,6 +48,16 @@ app.use(helmet({
 
 app.use(cookieParser());
 app.use(express.json({ limit: '100kb' }));
+
+// Health check for the host or an uptime monitor. Says only whether the app and the database respond.
+app.get('/api/health', async (req, res) => {
+  let db = false;
+  try {
+    await Promise.race([pool.query('SELECT 1'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))]);
+    db = true;
+  } catch (e) { /* db stays false */ }
+  res.set('Cache-Control', 'no-store').status(db ? 200 : 503).json({ ok: true, db });
+});
 
 app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: true, legacyHeaders: false }));
 app.use('/api/admin', require('./routes/admin'));
@@ -59,7 +81,7 @@ app.get(Object.keys(REDIRECTS), (req, res) => {
   res.redirect(301, page + (q >= 0 ? req.originalUrl.slice(q) : '') + (hash ? '#' + hash : ''));
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d', index: false, dotfiles: 'deny' }));
+app.use('/uploads', express.static(uploadDir, { maxAge: '7d', index: false, dotfiles: 'deny' }));
 app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'], maxAge: isProd ? '1h' : 0 }));
 
 app.use((req, res) => res.status(404).sendFile(path.join(__dirname, '..', 'public', '404.html')));

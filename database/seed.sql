@@ -44,7 +44,7 @@ INSERT INTO courses (id, category_id, title, summary, topics, duration, location
   'Curriculum and training design\nTenders for GoB, NSDA, donors\nAssessment and certification\nCapacity building',
   'Project-based', 'On-site / Online', 'Government, NGOs, partners', 'card', 'published', 5);
 
--- Course catalogue (table on the Services page; certificates link to these)
+-- Course catalogue rows (not shown on the site; certificates can link to these)
 INSERT INTO courses (id, category_id, title, standard, duration, location, best_for, listing, status, sort_order) VALUES
  (12, 1, 'GMP & Personal Hygiene for Food Handlers', 'Codex Food Hygiene', '4 hours', 'On-site / Online', 'Frontline workers', 'catalogue', 'published', 1),
  (13, 1, 'HACCP Fundamentals & CCP Monitoring', 'Codex HACCP', '2 days', 'On-site / Online', 'QA, supervisors', 'catalogue', 'published', 2),
@@ -61,9 +61,9 @@ INSERT INTO courses (id, category_id, title, standard, duration, location, best_
 
 -- Home slider
 INSERT INTO slides (title, eyebrow, text, button_text, button_link, sort_order, active) VALUES
- ('Build practical skills for a stronger future', '01 / Training', 'Professional training designed around real workplace needs.', 'Explore training', '/services.html', 1, 1),
- ('Get audit-ready with systems that last', '02 / Consultancy', 'Food safety, export readiness and compliance support built around your factory.', 'Explore consultancy', '/services.html#consultancy', 2, 1),
- ('Learn, plan and take the next step', '03 / Resources', 'Learning materials, career guidance and workplace resources in one place.', 'Browse resources', '/resources.html', 3, 1);
+ ('Build practical skills for a stronger future', '01 / Training', 'Professional training designed around real workplace needs.', 'Explore training', '/training.html', 1, 1),
+ ('Get audit-ready with systems that last', '02 / Consultancy', 'Food safety, export readiness and compliance support built around your factory.', 'Explore consultancy', '/consultancy.html', 2, 1),
+ ('Prepare for buyers, audits and export markets', '03 / Consultancy', 'Export readiness, HR and labour compliance and tender support, from gap assessment to audit day.', 'See consultancy services', '/consultancy.html', 3, 1);
 
 -- Resources page (no files yet: add PDFs from the admin panel)
 INSERT INTO resources (title, type, description, status) VALUES
@@ -81,9 +81,4 @@ INSERT INTO settings (setting_key, setting_value) VALUES
  ('whatsapp', ''),
  ('hours', '');
 
--- DEMO certificates copied from the prototype so you can test the verifier.
--- Delete or replace them in Admin > Certificates before going live.
-INSERT INTO certificates (number, course_id, holder_name, hours, issue_date, valid_until, status) VALUES
- ('GN-FS-2026-0142', 13, 'Demo holder (delete before launch)', 16, '2026-08-18', '2029-08-17', 'valid'),
- ('GN-OE-2026-0031', 17, 'Demo holder (delete before launch)', 8,  '2026-02-20', '2026-09-20', 'valid'),
- ('GN-FS-2025-0007', 12, 'Demo holder (delete before launch)', 4,  '2025-06-01', '2028-05-31', 'revoked');
+-- No certificates: add real ones in Admin > Certificates.
