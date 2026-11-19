@@ -30,7 +30,7 @@
       } else if (r.status === 'revoked') {
         show('revoked', 'Revoked', 'This certificate was withdrawn by Grow Nation.');
       } else {
-        show('nf', 'Not found', 'We have no record of ' + esc(n) + '. Check the number and try again, or <a href="/contact.html">contact us</a>.');
+        show('nf', 'Not found', 'We have no record of ' + esc(n) + '. Check the number and try again, or <a href="#contact">contact us</a>.');
       }
     }).catch(function (e) {
       show('err', 'Could not check', esc(e.message));

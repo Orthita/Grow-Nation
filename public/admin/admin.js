@@ -69,17 +69,19 @@
     },
     {
       id: 'courses', label: 'Courses and services', roles: CONTENT, res: 'courses', noun: 'course',
-      cols: [['title', 'Title'], ['category_name', 'Category'], ['listing', 'Shown as', function (r) { return pill(r.listing === 'card' ? 'Card' : 'Catalogue row', 'mute'); }],
+      cols: [['title', 'Title'], ['category_name', 'Category'], ['listing', 'Shown as', function (r) { return r.listing === 'card' ? pill('Card', 'mute') : pill('Not shown on site', 'bad'); }],
         ['duration', 'Duration'], ['sort_order', 'Order'], ['status', 'Status', function (r) { return statusPill(r.status); }]],
       defaults: { listing: 'card', status: 'published', sort_order: 0 },
       fields: [
         { k: 'category_id', label: 'Category', t: 'select', from: 'categories', req: true },
-        { k: 'listing', label: 'Shown as', t: 'select', opts: [['card', 'Card on Services tab'], ['catalogue', 'Row in course catalogue']], hint: 'Certificates can link to any course.' },
+        { k: 'listing', label: 'Shown as', t: 'select', hint: 'Cards appear on the Training or Consultancy page, depending on the category. Certificates can link to any course.',
+          // "catalogue" is no longer shown on the site: offer it only to keep existing catalogue rows unchanged.
+          opts: function (row) { return row && row.listing === 'catalogue' ? [['catalogue', 'Not shown on site (old catalogue row)'], ['card', 'Card on Training / Consultancy page']] : [['card', 'Card on Training / Consultancy page']]; } },
         { k: 'title', label: 'Title', req: true, full: true },
         { k: 'summary', label: 'Short summary', t: 'textarea', full: true },
         { k: 'topics', label: 'Course content', t: 'textarea', full: true, hint: 'One topic per line (cards only).' },
         { k: 'duration', label: 'Duration' }, { k: 'location', label: 'Location (on-site / online)' },
-        { k: 'standard', label: 'Standard (catalogue)' }, { k: 'best_for', label: 'Best for' },
+        { k: 'standard', label: 'Standard (not shown on site)' }, { k: 'best_for', label: 'Best for' },
         { k: 'image', label: 'Image', t: 'upload', accept: 'image/*', full: true },
         { k: 'status', label: 'Status', t: 'select', opts: PUB }, { k: 'sort_order', label: 'Order (small number first)', t: 'number' }
       ]
@@ -109,7 +111,8 @@
       ]
     },
     {
-      id: 'resources', label: 'Resources', roles: CONTENT, res: 'resources', noun: 'resource',
+      // Hidden from the admin menu: the public Resources page was removed. Delete "hidden: true" to bring it back.
+      id: 'resources', label: 'Resources', roles: CONTENT, res: 'resources', noun: 'resource', hidden: true,
       cols: [['title', 'Title'], ['type', 'Type'], ['file_url', 'File', function (r) { return r.file_url ? pill('Yes') : pill('No', 'mute'); }], ['status', 'Status', function (r) { return statusPill(r.status); }]],
       defaults: { type: 'learning', status: 'published' },
       fields: [
@@ -130,7 +133,7 @@
         { k: 'eyebrow', label: 'Small label (e.g. 01 / Training)' }, { k: 'sort_order', label: 'Order', t: 'number' },
         { k: 'title', label: 'Headline', req: true, full: true }, { k: 'text', label: 'Text', t: 'textarea', full: true },
         { k: 'image', label: 'Background image (optional)', t: 'upload', accept: 'image/*', full: true },
-        { k: 'button_text', label: 'Button text' }, { k: 'button_link', label: 'Button link', hint: 'For example /services.html' },
+        { k: 'button_text', label: 'Button text' }, { k: 'button_link', label: 'Button link', hint: 'For example /training.html, /consultancy.html or #contact' },
         { k: 'active', label: 'Show this slide', t: 'check' }
       ]
     },
@@ -174,7 +177,7 @@
     { id: 'account', label: 'My account', roles: null, render: renderAccount }
   ];
 
-  function allowed(sec) { return !sec.roles || sec.roles.indexOf(me.role) >= 0; }
+  function allowed(sec) { return !sec.hidden && (!sec.roles || sec.roles.indexOf(me.role) >= 0); }
 
   // ---------- navigation ----------
   function buildNav() {
@@ -257,7 +260,7 @@
     else if (f.t === 'check') {
       return '<div' + cls + '><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="' + id + '" name="' + f.k + '"' + (+v ? ' checked' : '') + '> ' + esc(f.label) + '</label>' + hint + '</div>';
     } else if (f.t === 'select') {
-      var opts = f.opts || (lookups[f.from] || []).map(function (o) { return [o.id, o.name || o.title]; });
+      var opts = (typeof f.opts === 'function' ? f.opts(row) : f.opts) || (lookups[f.from] || []).map(function (o) { return [o.id, o.name || o.title]; });
       body = '<select id="' + id + '" name="' + f.k + '">' + (f.req && !row ? '<option value="">Choose...</option>' : '') +
         opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(v) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
     } else if (f.t === 'upload') {

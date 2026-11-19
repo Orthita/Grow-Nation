@@ -6,7 +6,7 @@
     var box = $('#hs');
     if (!rows.length) { box.innerHTML = '<p class="empty">Programmes will appear here soon.</p>'; return; }
     box.innerHTML = rows.map(function (c) {
-      return '<a class="card" href="/services.html"><h3>' + esc(c.title) + '</h3><p>' + esc(c.summary) + '</p><small>For: ' + esc(c.best_for) + '</small></a>';
+      return '<a class="card" href="/training.html#' + esc(G.slug(c.title)) + '"><h3>' + esc(c.title) + '</h3><p>' + esc(c.summary) + '</p><small>For: ' + esc(c.best_for) + '</small></a>';
     }).join('');
     G.reveal(box);
   }).catch(function () {
@@ -19,8 +19,19 @@
     $('#slider-sec').hidden = false;
     var box = $('#slider'), i = 0, timer = null;
 
+    // Old slide links point to pages that no longer exist: send them to the new pages.
+    // (Edit the slide text and link in Admin > Home slider to make this permanent.)
+    function fixLink(u) {
+      var p = String(u || '').trim();
+      if (/^\/(resources(\.html)?)(#.*)?$/i.test(p)) return '/consultancy.html';
+      if (/^\/services(\.html)?#consultancy$/i.test(p)) return '/consultancy.html';
+      if (/^\/services(\.html)?(#.*)?$/i.test(p)) return '/training.html';
+      if (/^\/contact(\.html)?(\?.*)?$/i.test(p)) return '#contact';
+      return p;
+    }
     box.innerHTML = slides.map(function (s, n) {
-      var btn = s.button_text ? '<a class="btn" href="' + esc(G.safe(s.button_link)) + '">' + esc(s.button_text) + '</a>' : '';
+      var link = fixLink(s.button_link);
+      var btn = s.button_text ? '<a class="btn" href="' + esc(link === '#contact' ? link : G.safe(link)) + '">' + esc(s.button_text) + '</a>' : '';
       return '<div class="slide' + (n ? '' : ' on') + '" data-img="' + esc(s.image || '') + '" role="group" aria-label="Slide ' + (n + 1) + ' of ' + slides.length + '">' +
         (s.eyebrow ? '<small>' + esc(s.eyebrow) + '</small>' : '') + '<h3>' + esc(s.title) + '</h3>' +
         (s.text ? '<p>' + esc(s.text) + '</p>' : '') + btn + '</div>';

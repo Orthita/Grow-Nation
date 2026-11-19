@@ -42,6 +42,23 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api', require('./routes/public'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
+// Old addresses from before the site was reorganised (301 = moved permanently).
+const REDIRECTS = {
+  '/services': '/training.html',
+  '/services.html': '/training.html',
+  '/resources': '/index.html',
+  '/resources.html': '/index.html',
+  '/contact': '/index.html#contact',
+  '/contact.html': '/index.html#contact',
+};
+app.get(Object.keys(REDIRECTS), (req, res) => {
+  const target = REDIRECTS[req.path.toLowerCase().replace(/\/+$/, '')] || '/index.html';
+  const [page, hash] = target.split('#');
+  const q = req.originalUrl.indexOf('?');
+  // Keep the query string (e.g. /contact.html?course=5 still pre-selects the course).
+  res.redirect(301, page + (q >= 0 ? req.originalUrl.slice(q) : '') + (hash ? '#' + hash : ''));
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d', index: false, dotfiles: 'deny' }));
 app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'], maxAge: isProd ? '1h' : 0 }));
 
