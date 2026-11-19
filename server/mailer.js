@@ -41,4 +41,34 @@ async function notifyEnquiry(e) {
   });
 }
 
-module.exports = { notifyEnquiry };
+async function notifyEnrollment(e) {
+  const to = process.env.NOTIFY_EMAIL;
+  if (!transport || !to) {
+    console.log('[mail] SMTP / NOTIFY_EMAIL not set, enrollment saved without email (id ' + e.id + ')');
+    return;
+  }
+  const text = [
+    'New enrollment on the Grow Nation website',
+    '',
+    'Course: ' + e.course_title,
+    'Name: ' + e.name,
+    'Email: ' + e.email,
+    'Phone: ' + e.phone,
+    'Organisation: ' + (e.organisation || '-'),
+    'Preferred date: ' + (e.preferred_date || '-'),
+    '',
+    'Message:',
+    e.message || '-',
+    '',
+    'Manage it in the admin panel: Enrollments (id ' + e.id + ')',
+  ].join('\n');
+  await transport.sendMail({
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    to,
+    replyTo: e.email,
+    subject: 'New enrollment: ' + oneLine(e.course_title) + ' - ' + oneLine(e.name),
+    text,
+  });
+}
+
+module.exports = { notifyEnquiry, notifyEnrollment };

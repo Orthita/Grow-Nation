@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Admin | Grow Nation</title>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
 <div class="app">
   <aside class="side" id="side" aria-label="Admin menu">
-    <div class="brand">Grow Nation</div>
+    <a class="brand" href="#overview"><svg class="logo" viewBox="0 0 260 260" aria-hidden="true"><path d="M0 0H125V125Z"/><path d="M135 0H260V125Z"/><path d="M135 135H260V260Z"/></svg><div>Grow Nation<small>Admin panel</small></div></a>
     <div id="nav"></div>
-    <div class="who"><span id="who"></span><br><button class="btn ghost sm" id="logout" style="margin-top:8px">Log out</button></div>
+    <div class="who"><span id="who"></span><div class="who-act"><a class="btn ghost sm" href="/" target="_blank" rel="noopener">View website</a><button class="btn ghost sm" id="logout">Log out</button></div></div>
   </aside>
   <div class="main">
     <div class="top">
-      <div style="display:flex;gap:10px;align-items:center"><button class="btn ghost sm menu-btn" id="menu" aria-label="Open menu">Menu</button><h2 id="title">Overview</h2></div>
+      <div style="display:flex;gap:10px;align-items:center"><button class="btn ghost sm menu-btn" id="menu" aria-label="Open menu">Menu</button><h2 id="title">Dashboard</h2></div>
       <div class="tools" id="tools"></div>
     </div>
     <div id="msg"></div>

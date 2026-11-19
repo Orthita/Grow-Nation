@@ -1,86 +1,12 @@
 (function () {
-  var G = window.GN, $ = G.$, esc = G.esc;
+  var G = window.GN, $ = G.$;
 
-  // ---- Six programme areas (from MySQL) ----
-  G.api('/api/courses?type=training&listing=card').then(function (rows) {
-    var box = $('#hs');
-    if (!rows.length) { box.innerHTML = '<p class="empty">Programmes will appear here soon.</p>'; return; }
-    box.innerHTML = rows.map(function (c) {
-      return '<a class="card" href="/training.html#' + esc(G.slug(c.title)) + '"><h3>' + esc(c.title) + '</h3><p>' + esc(c.summary) + '</p><small>For: ' + esc(c.best_for) + '</small></a>';
-    }).join('');
-    G.reveal(box);
-  }).catch(function () {
-    $('#hs').innerHTML = '<p class="empty">Programmes could not be loaded. Please refresh the page.</p>';
-  });
-
-  // ---- Slider ----
-  G.api('/api/slides').then(function (slides) {
-    if (!slides.length) return;
-    $('#slider-sec').hidden = false;
-    var box = $('#slider'), i = 0, timer = null;
-
-    // Old slide links point to pages that no longer exist: send them to the new pages.
-    // (Edit the slide text and link in Admin > Home slider to make this permanent.)
-    function fixLink(u) {
-      var p = String(u || '').trim();
-      if (/^\/(resources(\.html)?)(#.*)?$/i.test(p)) return '/consultancy.html';
-      if (/^\/services(\.html)?#consultancy$/i.test(p)) return '/consultancy.html';
-      if (/^\/services(\.html)?(#.*)?$/i.test(p)) return '/training.html';
-      if (/^\/contact(\.html)?(\?.*)?$/i.test(p)) return '#contact';
-      return p;
-    }
-    box.innerHTML = slides.map(function (s, n) {
-      var link = fixLink(s.button_link);
-      var btn = s.button_text ? '<a class="btn" href="' + esc(link === '#contact' ? link : G.safe(link)) + '">' + esc(s.button_text) + '</a>' : '';
-      return '<div class="slide' + (n ? '' : ' on') + '" data-img="' + esc(s.image || '') + '" role="group" aria-label="Slide ' + (n + 1) + ' of ' + slides.length + '">' +
-        (s.eyebrow ? '<small>' + esc(s.eyebrow) + '</small>' : '') + '<h3>' + esc(s.title) + '</h3>' +
-        (s.text ? '<p>' + esc(s.text) + '</p>' : '') + btn + '</div>';
-    }).join('') + '<div class="dots">' + slides.map(function (s, n) {
-      return '<button type="button" aria-label="Go to slide ' + (n + 1) + '"' + (n ? '' : ' aria-current="true"') + '></button>';
-    }).join('') + '</div>';
-
-    var els = G.$$('.slide', box), dots = G.$$('.dots button', box);
-    els.forEach(function (el) {
-      var u = el.getAttribute('data-img');
-      if (u && /^(\/|https?:\/\/)/i.test(u)) {
-        el.style.backgroundImage = 'linear-gradient(100deg,rgba(46,16,101,.9),rgba(46,16,101,.25)),url("' + u.replace(/["\\\n\r]/g, '') + '")';
-      }
-    });
-
-    function show(n) {
-      i = (n + els.length) % els.length;
-      els.forEach(function (el, k) { el.classList.toggle('on', k === i); });
-      dots.forEach(function (d, k) { if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
-    }
-    function play() { if (!G.RM && els.length > 1) { stop(); timer = setInterval(function () { show(i + 1); }, 6000); } }
-    function stop() { if (timer) clearInterval(timer); timer = null; }
-
-    $('#sl-prev').onclick = function () { show(i - 1); play(); };
-    $('#sl-next').onclick = function () { show(i + 1); play(); };
-    dots.forEach(function (d, k) { d.onclick = function () { show(k); play(); }; });
-    box.addEventListener('mouseenter', stop);
-    box.addEventListener('mouseleave', play);
-    box.addEventListener('focusin', stop);
-    box.addEventListener('focusout', play);
-    if (els.length < 2) { $('.sl-ctl').style.display = 'none'; $('.dots', box).style.display = 'none'; }
-    play();
-  }).catch(function () {});
-
-  // ---- Testimonials (section stays hidden until the team adds some) ----
-  G.api('/api/testimonials').then(function (rows) {
-    if (!rows.length) return;
-    $('#tsec').hidden = false;
-    $('#tgrid').innerHTML = rows.map(function (t) {
-      return '<div class="card tcard"><blockquote>&ldquo;' + esc(t.quote) + '&rdquo;</blockquote><cite>' + esc(t.name) + (t.role ? '<span>' + esc(t.role) + '</span>' : '') + '</cite></div>';
-    }).join('');
-    G.reveal($('#tgrid'));
-  }).catch(function () {});
-
-  // ---- Verifier box sends the number to the Verification page ----
-  $('#hv').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var v = $('#hn').value.trim();
-    location.href = '/verify.html' + (v ? '?n=' + encodeURIComponent(v) : '');
+  // ---- About Us: address comes from Admin > Contact details (falls back to the text in the page) ----
+  G.settings.then(function (s) {
+    var a = String((s && s.office_address) || '').trim();
+    if (!a) return;
+    $('#ab-address').textContent = a;
+    $('#ab-map').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
   });
 
   // ---- 3D logo (falls back to the flat logo if WebGL is not available) ----

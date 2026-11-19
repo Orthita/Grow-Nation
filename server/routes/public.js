@@ -2,7 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const pool = require('../db');
-const { notifyEnquiry } = require('../mailer');
+const { notifyEnquiry, notifyEnrollment } = require('../mailer');
 const { enquiriesEnabled } = require('../config');
 
 const router = express.Router();
@@ -36,7 +36,7 @@ router.get('/courses', wrap(async (req, res) => {
     params.push(req.query.listing);
   }
   const [rows] = await pool.execute(
-    `SELECT c.id, c.title, c.summary, c.topics, c.duration, c.location, c.standard, c.best_for, c.image,
+    `SELECT c.id, c.title, c.summary, c.topics, c.duration, c.fee, c.location, c.standard, c.best_for, c.image,
             c.listing, cat.type, cat.name AS category,
             (SELECT MIN(b.start_date) FROM batches b
               WHERE b.course_id = c.id AND b.status = 'open' AND b.start_date >= CURDATE()) AS next_batch
@@ -119,6 +119,59 @@ router.post('/enquiries', enquiriesSwitch, enquiryLimiter, [
     [courseId, rec.name, rec.organisation, rec.phone, rec.email, rec.interest, rec.message]
   );
   notifyEnquiry({ id: r.insertId, ...rec }).catch((e) => console.error('[mail] failed:', e.message));
+  res.status(201).json({ ok: true });
+}));
+
+// ---- Enroll Now form (Training / Consultancy cards) ----
+const enrollLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many enrollments from this connection. Please try again later or call us.' },
+});
+
+router.post('/enrollments', enrollLimiter, [
+  body('course_id').isInt({ min: 1 }).withMessage('Please choose a course'),
+  body('name').trim().isLength({ min: 2, max: 150 }).withMessage('Please enter your full name'),
+  body('email').trim().isEmail().withMessage('Please enter a valid email address').isLength({ max: 190 }),
+  body('phone').trim().matches(/^[0-9+()\-\s.]{6,40}$/).withMessage('Please enter a valid phone number'),
+  body('organisation').optional({ values: 'falsy' }).trim().isLength({ max: 190 }).withMessage('Organisation name is too long'),
+  body('preferred_date').optional({ values: 'falsy' }).trim()
+    .matches(/^\d{4}-\d{2}-\d{2}$/).withMessage('Preferred date looks wrong')
+    .custom((v) => {
+      const d = new Date(v + 'T00:00:00Z');
+      if (isNaN(d) || d.toISOString().slice(0, 10) !== v) throw new Error('Preferred date looks wrong');
+      if (v < new Date(Date.now() - 864e5).toISOString().slice(0, 10)) throw new Error('Preferred date cannot be in the past');
+      return true;
+    }),
+  body('message').optional({ values: 'falsy' }).trim().isLength({ max: 2000 }).withMessage('Message is too long (2000 characters max)'),
+], wrap(async (req, res) => {
+  // Hidden "website" field: real people leave it empty, simple bots fill it.
+  if (req.body.website) return res.status(201).json({ ok: true });
+
+  const errs = validationResult(req);
+  if (!errs.isEmpty()) return res.status(400).json({ error: errs.array()[0].msg });
+
+  const b = req.body;
+  const [c] = await pool.execute("SELECT id, title FROM courses WHERE id = ? AND status = 'published' LIMIT 1", [+b.course_id]);
+  if (!c[0]) return res.status(400).json({ error: 'This course is not available any more. Please refresh the page.' });
+
+  const rec = {
+    course_title: c[0].title,
+    name: b.name,
+    email: b.email,
+    phone: b.phone,
+    organisation: b.organisation || null,
+    preferred_date: b.preferred_date || null,
+    message: b.message || null,
+  };
+  const [r] = await pool.execute(
+    `INSERT INTO enrollments (course_id, course_title, name, email, phone, organisation, preferred_date, message)
+     VALUES (?,?,?,?,?,?,?,?)`,
+    [c[0].id, rec.course_title, rec.name, rec.email, rec.phone, rec.organisation, rec.preferred_date, rec.message]
+  );
+  notifyEnrollment({ id: r.insertId, ...rec }).catch((e) => console.error('[mail] failed:', e.message));
   res.status(201).json({ ok: true });
 }));
 

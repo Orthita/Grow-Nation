@@ -65,13 +65,22 @@ app.use('/api', require('./routes/public'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
 // Old addresses from before the site was reorganised (301 = moved permanently).
+// Every page is now a section of the one-page home page.
 const REDIRECTS = {
-  '/services': '/training.html',
-  '/services.html': '/training.html',
-  '/resources': '/index.html',
-  '/resources.html': '/index.html',
-  '/contact': '/index.html#contact',
-  '/contact.html': '/index.html#contact',
+  '/services': '/#training',
+  '/services.html': '/#training',
+  '/training': '/#training',
+  '/training.html': '/#training',
+  '/consultancy': '/#consultancy',
+  '/consultancy.html': '/#consultancy',
+  '/verify': '/#verification',
+  '/verify.html': '/#verification',
+  '/about': '/#about',
+  '/about.html': '/#about',
+  '/resources': '/',
+  '/resources.html': '/',
+  '/contact': '/#contact',
+  '/contact.html': '/#contact',
 };
 app.get(Object.keys(REDIRECTS), (req, res) => {
   const target = REDIRECTS[req.path.toLowerCase().replace(/\/+$/, '')] || '/index.html';

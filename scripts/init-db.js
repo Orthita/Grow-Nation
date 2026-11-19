@@ -28,6 +28,22 @@ const strip = (sql) => sql.replace(/^\s*(CREATE DATABASE|USE)\b[^;]*;\s*$/gim, '
   await conn.query(strip(fs.readFileSync(path.join(root, 'database', 'schema.sql'), 'utf8')));
   console.log('Tables ready.');
 
+  // Small upgrades for databases created before a column or value existed. Each step is safe to repeat.
+  const colInfo = async (table, col) => (await conn.query(
+    'SELECT COLUMN_TYPE AS t FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?', [db, table, col]
+  ))[0][0];
+  if (!(await colInfo('courses', 'fee'))) {
+    await conn.query('ALTER TABLE courses ADD COLUMN fee VARCHAR(120) NULL AFTER duration');
+    console.log('Upgrade: added courses.fee');
+  }
+  const st = await colInfo('enrollments', 'status');
+  if (st && !/'rejected'/.test(st.t)) {
+    await conn.query("ALTER TABLE enrollments MODIFY status ENUM('pending','contacted','confirmed','rejected','cancelled') NOT NULL DEFAULT 'pending'");
+    await conn.query("UPDATE enrollments SET status = 'rejected' WHERE status = 'cancelled'");
+    await conn.query("ALTER TABLE enrollments MODIFY status ENUM('pending','contacted','confirmed','rejected') NOT NULL DEFAULT 'pending'");
+    console.log('Upgrade: enrollment status "cancelled" is now "rejected"');
+  }
+
   const [[cat]] = await conn.query('SELECT COUNT(*) AS n FROM categories');
   if (cat.n === 0 && !process.argv.includes('--no-seed')) {
     await conn.query(strip(fs.readFileSync(path.join(root, 'database', 'seed.sql'), 'utf8')));

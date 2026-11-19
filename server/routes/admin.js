@@ -173,9 +173,21 @@ router.post('/upload', allow('super_admin', 'editor', 'certificate_officer'), (r
 router.get('/stats', wrap(async (req, res) => {
   const one = async (sql) => (await pool.execute(sql))[0][0].n;
   const out = {};
+  const role = req.user.role;
+  if (role !== 'certificate_officer') {
+    out.total_trainings = await one("SELECT COUNT(*) n FROM courses c JOIN categories cat ON cat.id = c.category_id WHERE cat.type = 'training' AND c.listing = 'card'");
+    out.total_consultancy = await one("SELECT COUNT(*) n FROM courses c JOIN categories cat ON cat.id = c.category_id WHERE cat.type = 'consultancy' AND c.listing = 'card'");
+  }
+  if (['super_admin', 'support'].includes(role)) {
+    const [recent] = await pool.execute(
+      'SELECT id, course_title, name, phone, email, status, created_at FROM enrollments ORDER BY created_at DESC, id DESC LIMIT 6'
+    );
+    out.recent_enrollments = recent;
+  }
+  if (['super_admin', 'support'].includes(req.user.role)) out.pending_enrollments = await one("SELECT COUNT(*) n FROM enrollments WHERE status='pending'");
+  if (['super_admin', 'support'].includes(req.user.role)) out.total_enrollments = await one('SELECT COUNT(*) n FROM enrollments');
   if (['super_admin', 'support'].includes(req.user.role)) out.new_enquiries = await one("SELECT COUNT(*) n FROM enquiries WHERE status='new'");
   if (['super_admin', 'support'].includes(req.user.role)) out.total_enquiries = await one('SELECT COUNT(*) n FROM enquiries');
-  if (CONTENT.includes(req.user.role)) out.published_courses = await one("SELECT COUNT(*) n FROM courses WHERE status='published'");
   if (CONTENT.includes(req.user.role)) out.upcoming_batches = await one("SELECT COUNT(*) n FROM batches WHERE status='open' AND start_date >= CURDATE()");
   if (['super_admin', 'certificate_officer'].includes(req.user.role)) {
     out.certificates = await one('SELECT COUNT(*) n FROM certificates');
@@ -185,12 +197,13 @@ router.get('/stats', wrap(async (req, res) => {
 }));
 
 router.get('/lookups', wrap(async (req, res) => {
-  const [categories] = await pool.execute('SELECT id, name FROM categories ORDER BY type, sort_order, id');
+  const [categories] = await pool.execute('SELECT id, name, type FROM categories ORDER BY type, sort_order, id');
   const [courses] = await pool.execute('SELECT id, title FROM courses ORDER BY listing, sort_order, id');
   res.json({ categories, courses });
 }));
 
-const SETTING_KEYS = ['office_address', 'registration', 'phone', 'email', 'website', 'whatsapp', 'hours'];
+const SOCIAL_KEYS = ['facebook', 'linkedin', 'instagram', 'youtube'];
+const SETTING_KEYS = ['office_address', 'registration', 'phone', 'email', 'website', 'whatsapp', 'hours', ...SOCIAL_KEYS];
 
 router.get('/settings', allow(...CONTENT), wrap(async (req, res) => {
   const [rows] = await pool.execute('SELECT setting_key, setting_value FROM settings');
@@ -206,6 +219,10 @@ router.put('/settings', allow(...CONTENT), wrap(async (req, res) => {
   const { out, errors } = clean(def, req.body, true);
   if (errors.length) return res.status(400).json({ error: errors[0] });
   if (out.website && !/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s"'<>]*)?$/i.test(out.website)) return res.status(400).json({ error: 'Website: a web address such as www.grownation.org' });
+  if (out.email && !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(out.email)) return res.status(400).json({ error: 'Email: an address such as info@grownation.org' });
+  for (const k of SOCIAL_KEYS) {
+    if (out[k] && !/^https:\/\/[^\s"'<>]+$/i.test(out[k])) return res.status(400).json({ error: k.charAt(0).toUpperCase() + k.slice(1) + ': the full link, starting with https://' });
+  }
   if (out.whatsapp && !/^[0-9+\s-]{6,20}$/.test(out.whatsapp)) return res.status(400).json({ error: 'WhatsApp number: digits only, with country code (for example 8801XXXXXXXXX)' });
   for (const [k, v] of Object.entries(out)) {
     await pool.execute(
@@ -313,6 +330,7 @@ const RES = {
       summary: { t: 'text', max: 1000 },
       topics: { t: 'text', max: 2000 },
       duration: { t: 'str', max: 120 },
+      fee: { t: 'str', max: 120 },
       location: { t: 'str', max: 120 },
       standard: { t: 'str', max: 160 },
       best_for: { t: 'str', max: 200 },
@@ -333,6 +351,14 @@ const RES = {
       seats: { t: 'int', min: 0, max: 100000 },
       status: { t: 'enum', v: ['open', 'full', 'cancelled'] },
     },
+  },
+  enrollments: {
+    // From the Enroll Now form. Staff only change the status; only Super admin may delete.
+    table: 'enrollments', roles: ['super_admin', 'support'], noCreate: true, deleteRoles: ['super_admin'],
+    list: `SELECT id, course_id, course_title, name, email, phone, organisation,
+                  DATE_FORMAT(preferred_date, '%Y-%m-%d') AS preferred_date, message, status, created_at
+             FROM enrollments ORDER BY created_at DESC, id DESC LIMIT 1000`,
+    fields: { status: { t: 'enum', req: true, v: ['pending', 'contacted', 'confirmed', 'rejected'] } },
   },
   enquiries: {
     // Only Super admin may delete; Support closes enquiries instead.

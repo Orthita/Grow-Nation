@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS courses (
   summary TEXT NULL,
   topics TEXT NULL,                       -- one topic per line
   duration VARCHAR(120) NULL,
+  fee VARCHAR(120) NULL,                  -- shown on the card, e.g. "BDT 5,000 per person"
   location VARCHAR(120) NULL,
   standard VARCHAR(160) NULL,
   best_for VARCHAR(200) NULL,
@@ -67,6 +68,23 @@ CREATE TABLE IF NOT EXISTS enquiries (
   status ENUM('new','contacted','closed') NOT NULL DEFAULT 'new',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_enquiries_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Enroll Now form on the Training / Consultancy cards. Staff follow up and set the status.
+CREATE TABLE IF NOT EXISTS enrollments (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  course_id INT UNSIGNED NULL,
+  course_title VARCHAR(200) NOT NULL,     -- copy of the title, kept if the course is renamed or deleted
+  name VARCHAR(150) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  phone VARCHAR(40) NOT NULL,
+  organisation VARCHAR(190) NULL,
+  preferred_date DATE NULL,
+  message TEXT NULL,
+  status ENUM('pending','contacted','confirmed','rejected') NOT NULL DEFAULT 'pending',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_enrollments_time (created_at),
+  CONSTRAINT fk_enrollments_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS certificates (

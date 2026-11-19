@@ -218,10 +218,11 @@ Free uptime monitors (for example UptimeRobot) can check this address every few 
 1. Back up first (section 4).
 2. Upload the changed files (never overwrite the server's `.env` or the uploads folder).
 3. If `package.json` changed: `npm install --omit=dev`.
-4. Restart: cPanel → **Restart**; VPS → `pm2 restart grownation`.
-5. Check `/api/health` and click through the site.
+4. If `database/schema.sql` gained a new table (for example `enrollments` for the Enroll Now form): `npm run init-db`. On a database that already has data it only creates the missing tables; it does not touch existing rows, starter content or admin users.
+5. Restart: cPanel → **Restart**; VPS → `pm2 restart grownation`.
+6. Check `/api/health` and click through the site.
 
-Do **not** run `npm run init-db` again to "update". It only adds starter content to an empty database.
+Running `npm run init-db` never changes existing tables or data, so it cannot "update" content: use the admin panel for that.
 
 ---
 
@@ -240,8 +241,8 @@ Do **not** run `npm run init-db` again to "update". It only adds starter content
 - [ ] Change the admin password in **My account** if a printed one was used
 - [ ] Turn on **two-step login** in **My account**
 - [ ] **Contact details:** address, phone, email and website are correct; add WhatsApp if confirmed
-- [ ] **Certificates:** only real certificates exist; verify one on `/verify.html`
-- [ ] **Home slider:** text and links are correct (`/training.html`, `/consultancy.html`); add images if wanted
+- [ ] **Certificates:** only real certificates exist; verify one in the Verification section (`/#verification`)
+- [ ] **Home slider:** no longer shown on the one-page home page
 - [ ] **Courses and services:** titles, durations and summaries approved by the client
 - [ ] Upload one test image, check it shows, then remove it
 
@@ -249,4 +250,4 @@ Do **not** run `npm run init-db` again to "update". It only adds starter content
 - [ ] Open every page on a phone and on a computer: Home, Our Training Services, Our Consultancy Services, Verification, About Us
 - [ ] Footer contact links work (phone, email, website)
 - [ ] Enroll Now opens an email with the course in the subject
-- [ ] Old addresses redirect: `/services.html`, `/contact.html`, `/resources.html`
+- [ ] Old addresses redirect to their home-page sections: `/training.html`, `/consultancy.html`, `/verify.html`, `/about.html`, `/services.html`, `/contact.html`
