@@ -24,10 +24,13 @@
   }
 
   G.settings.then(function (s) {
-    var h = '<dt>Office</dt><dd>' + esc(s.office_address || 'Mohammadpur, Dhaka, Bangladesh') + '</dd>';
+    var h = '';
+    if (s.office_address) h += '<dt>Office</dt><dd>' + esc(s.office_address) + '</dd>';
     if (s.registration) h += '<dt>Registration</dt><dd>' + esc(s.registration) + '</dd>';
     if (s.phone) h += '<dt>Phone</dt><dd>' + esc(s.phone) + '</dd>';
     if (s.email) h += '<dt>Email</dt><dd>' + esc(s.email) + '</dd>';
+    var web = G.siteLink(s.website);
+    if (web) h += '<dt>Website</dt><dd>' + web + '</dd>';
     if (s.hours) h += '<dt>Hours</dt><dd>' + esc(s.hours) + '</dd>';
     $('#details').innerHTML = h;
   });

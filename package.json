@@ -7,6 +7,7 @@
     "start": "node server/app.js",
     "dev": "node --watch server/app.js",
     "init-db": "node scripts/init-db.js",
+    "update-settings": "node scripts/update-settings.js",
     "test": "node scripts/selftest.js"
   },
   "engines": { "node": ">=18" },

@@ -332,7 +332,7 @@
   // ---------- contact details ----------
   function renderSettings() {
     return api('/settings').then(function (s) {
-      var F = [['office_address', 'Office address'], ['registration', 'Registration line'], ['phone', 'Phone'], ['email', 'Public email'], ['whatsapp', 'WhatsApp number (digits with country code, e.g. 8801XXXXXXXXX)'], ['hours', 'Office hours']];
+      var F = [['office_address', 'Office address'], ['registration', 'Registration line'], ['phone', 'Phone'], ['email', 'Public email'], ['website', 'Website (e.g. www.grownation.org)'], ['whatsapp', 'WhatsApp number (digits with country code, e.g. 8801XXXXXXXXX)'], ['hours', 'Office hours']];
       $('#view').innerHTML = '<form class="panel" id="sf" novalidate style="max-width:640px"><p class="hint" style="margin-top:0">These appear on the Contact page and footer. The WhatsApp button shows on every page once a number is added.</p>' +
         F.map(function (f) { return '<div style="margin-bottom:14px"><label for="s_' + f[0] + '">' + esc(f[1]) + '</label><input id="s_' + f[0] + '" value="' + esc(s[f[0]]) + '"></div>'; }).join('') +
         '<button class="btn" type="submit">Save</button></form>';

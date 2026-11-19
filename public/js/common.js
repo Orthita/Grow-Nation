@@ -22,6 +22,13 @@
   // Only allow local paths and http(s) links in values that come from the database.
   function safe(u) { return /^(\/|https?:\/\/)/i.test(u || '') ? u : '#'; }
 
+  // Turn the "website" setting (e.g. www.grownation.org) into a link. Returns '' if it doesn't look like a web address.
+  function siteLink(w) {
+    var host = String(w || '').trim().replace(/^https?:\/\//i, '');
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s"'<>]*)?$/i.test(host)) return '';
+    return '<a href="https://' + esc(host) + '" target="_blank" rel="noopener">' + esc(host.replace(/\/$/, '')) + '</a>';
+  }
+
   var settings = api('/api/settings').catch(function () { return {}; });
 
   var NAV = [
@@ -47,10 +54,10 @@
     var header = '<header><div class="wrap bar"><a class="brand" href="/" aria-label="Grow Nation home"><svg aria-hidden="true"><use href="#lg"/></svg><b>Grow<br>Nation</b></a>' +
       '<nav aria-label="Main"><div class="pill">' + links + '</div><a class="cta" href="/contact.html"' + (cur === 'contact' ? ' aria-current="page"' : '') + '>Contact us</a></nav></div></header>';
     var footer = '<footer><div class="wrap"><div class="fg"><div><a class="brand" href="/" style="margin-bottom:12px"><svg aria-hidden="true"><use href="#lg"/></svg><b>Grow<br>Nation</b></a>' +
-      '<p>Training, consultancy and certification for industries, professionals and communities in Bangladesh.</p><p id="ft-contact" class="note"></p></div>' +
+      '<p>Grow Nation &mdash; an industrial consulting &amp; training organization. Train. Transform. Triumph.</p><p id="ft-contact" class="note"></p></div>' +
       '<div><h3>Pages</h3>' + NAV.map(function (n) { return '<a href="' + n[1] + '">' + n[0] + '</a>'; }).join('') + '<a href="/contact.html">Contact us</a></div>' +
       '<div><h3>Popular programmes</h3><a href="/services.html#catalogue">HACCP and GMP</a><a href="/services.html#catalogue">ISO 22000 Internal Auditor</a><a href="/services.html#catalogue">5S and Lean basics</a><a href="/services.html#catalogue">Labour law for supervisors</a></div>' +
-      '</div><div class="copy">&copy; ' + new Date().getFullYear() + ' Grow Nation. Proprietorship &middot; Mohammadpur, Dhaka, Bangladesh</div></div></footer>';
+      '</div><div class="copy">&copy; ' + new Date().getFullYear() + ' Grow Nation &middot; Mohammadpur, Dhaka, Bangladesh</div></div></footer>';
 
     document.body.insertAdjacentHTML('afterbegin', logo + '<div id="site-header">' + header + '</div>');
     var f = $('#site-footer');
@@ -60,6 +67,8 @@
       var bits = [];
       if (s.phone) bits.push('Phone: ' + esc(s.phone));
       if (s.email) bits.push('Email: ' + esc(s.email));
+      var web = siteLink(s.website);
+      if (web) bits.push('Website: ' + web);
       var el = $('#ft-contact');
       if (el) el.innerHTML = bits.join('<br>');
       var wa = String(s.whatsapp || '').replace(/\D/g, '');
@@ -100,7 +109,7 @@
     });
   }
 
-  window.GN = { $: $, $$: $$, esc: esc, api: api, safe: safe, settings: settings, reveal: reveal, RM: RM };
+  window.GN = { $: $, $$: $$, esc: esc, api: api, safe: safe, siteLink: siteLink, settings: settings, reveal: reveal, RM: RM };
   buildLayout();
   reveal();
 })();

@@ -73,10 +73,11 @@ INSERT INTO resources (title, type, description, status) VALUES
 
 -- Contact details (edit later in Admin > Contact details)
 INSERT INTO settings (setting_key, setting_value) VALUES
- ('office_address', 'Mohammadpur, Dhaka, Bangladesh'),
+ ('office_address', 'House No-86/1, Jamurun Nessa Palace (Level-03), Adabor Bazar Road, Mohammadpur PS, Dhaka-1207, Bangladesh'),
  ('registration', 'Proprietorship, BIN registered with NBR (June 2026)'),
- ('phone', ''),
- ('email', ''),
+ ('phone', '+88 01726511168'),
+ ('email', 'grownationbd@gmail.com'),
+ ('website', 'www.grownation.org'),
  ('whatsapp', ''),
  ('hours', '');
 

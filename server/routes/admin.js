@@ -191,7 +191,7 @@ router.get('/lookups', wrap(async (req, res) => {
   res.json({ categories, courses });
 }));
 
-const SETTING_KEYS = ['office_address', 'registration', 'phone', 'email', 'whatsapp', 'hours'];
+const SETTING_KEYS = ['office_address', 'registration', 'phone', 'email', 'website', 'whatsapp', 'hours'];
 
 router.get('/settings', allow(...CONTENT), wrap(async (req, res) => {
   const [rows] = await pool.execute('SELECT setting_key, setting_value FROM settings');
@@ -206,6 +206,7 @@ router.put('/settings', allow(...CONTENT), wrap(async (req, res) => {
   SETTING_KEYS.forEach((k) => { def[k] = { t: 'str', max: 300 }; });
   const { out, errors } = clean(def, req.body, true);
   if (errors.length) return res.status(400).json({ error: errors[0] });
+  if (out.website && !/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s"'<>]*)?$/i.test(out.website)) return res.status(400).json({ error: 'Website: a web address such as www.grownation.org' });
   if (out.whatsapp && !/^[0-9+\s-]{6,20}$/.test(out.whatsapp)) return res.status(400).json({ error: 'WhatsApp number: digits only, with country code (for example 8801XXXXXXXXX)' });
   for (const [k, v] of Object.entries(out)) {
     await pool.execute(
